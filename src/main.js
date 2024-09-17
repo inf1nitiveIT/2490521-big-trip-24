@@ -1,4 +1,4 @@
-import {render} from './render.js';
+import { render } from './framework/render.js';
 import FilterListView from './view/filter-list-view.js';
 import BoardPresenter from './presenter/presenter.js';
 import RoutePointsModel from './model/route-point-model.js';

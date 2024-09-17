@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view';
 import { humanizeTaskDueDate } from '../utils.js';
 import { getDifferenceTime } from '../utils.js';
 
@@ -51,27 +51,33 @@ function createNewRoutePointTemplate(point, offers, destination) {
               </div>`);
 }
 
-export default class RoutePointView {
-  constructor({point, offers, destination}) {
-    this.point = point;
-    this.offers = offers;
-    this.destination = destination;
+export default class RoutePointView extends AbstractView{
+  #point = null;
+  #destination = null;
+  #offers = null;
+  #handleToggleButtonClick = null;
+
+  constructor({point, offers, destination, onEditFormButtonClick}) {
+    super();
+    this.#point = point;
+    this.#offers = offers;
+    this.#destination = destination;
+    this.#handleToggleButtonClick = onEditFormButtonClick;
+    this.#setEventListeners();
   }
 
-  getTemplate() {
-    return createNewRoutePointTemplate(this.point, this.offers, this.destination);
+  #setEventListeners() {
+    const toggleEditFormHandler = (evt) => {
+      evt.preventDefault();
+      this.#handleToggleButtonClick();
+    };
+
+    this.element
+      .querySelector('.event__rollup-btn')
+      .addEventListener('click', toggleEditFormHandler);
   }
 
-  getElement() {
-    if(!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
+  get template() {
+    return createNewRoutePointTemplate(this.#point, this.#offers, this.#destination);
   }
-
-  removeElement() {
-    this.element = null;
-  }
-
 }
