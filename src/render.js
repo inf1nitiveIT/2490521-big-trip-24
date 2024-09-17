@@ -12,6 +12,4 @@ function createElement(template) {
   return newElement.firstElementChild;
 }
 
-
-
 export {RenderPosition, createElement};
