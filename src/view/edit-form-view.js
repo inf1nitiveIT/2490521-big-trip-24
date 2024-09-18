@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view';
 import { humanizeTaskDueDate } from '../utils.js';
 
 function createOffersTemplate({ title, price, checkedAttribute }) {
@@ -142,26 +142,46 @@ function createEditFormTemplate(point, destination, offers) {
               </form>`);
 }
 
-export default class EditFormView {
-  constructor({point, destination, offers}) {
-    this.point = point;
-    this.destination = destination;
-    this.offers = offers;
+export default class EditFormView extends AbstractView {
+  #point = null;
+  #destination = null;
+  #offers = null;
+  #handleToggleButtonClick = null;
+  #handleFormSubmit = null;
+
+  constructor({point, destination, offers, onToggleButtonClick, onFormSubmit}) {
+    super();
+    this.#point = point;
+    this.#destination = destination;
+    this.#offers = offers;
+    this.#handleToggleButtonClick = onToggleButtonClick;
+    this.#handleFormSubmit = onFormSubmit;
+    this.#setEventListeners();
   }
 
-  getTemplate() {
-    return createEditFormTemplate(this.point, this.destination, this.offers);
+  #setEventListeners() {
+    const toggleEditFormHandler = (evt) => {
+      evt.preventDefault();
+      this.#handleToggleButtonClick();
+    };
+
+    const formSubmitHandler = (evt) => {
+      evt.preventDefault();
+      this.#handleFormSubmit();
+    };
+
+    this.element
+      .querySelector('.event__rollup-btn')
+      .addEventListener('click', toggleEditFormHandler);
+
+    this.element
+      .querySelector('.event__save-btn')
+      .addEventListener('submit', formSubmitHandler);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
 
-    return this.element;
+  get template() {
+    return createEditFormTemplate(this.#point, this.#destination, this.#offers);
   }
 
-  removeElement() {
-    this.element = null;
-  }
 }
