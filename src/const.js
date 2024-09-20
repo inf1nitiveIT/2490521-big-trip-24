@@ -18,4 +18,11 @@ const Cities = {
   TOKIO: 'Tokio'
 };
 
-export {PointType, Cities};
+const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past'
+};
+
+export {PointType, Cities, FilterType};
