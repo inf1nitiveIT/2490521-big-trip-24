@@ -1,8 +1,7 @@
 import { getRandomArrayElement, getRandomNumber, getRandomBoolean } from '../utils';
-
+import { nanoid } from 'nanoid';
 
 const mockRoutePoints = [{
-  id: 1,
   basePrice: getRandomNumber(),
   dateFrom: '2024-08-02T18:10:00.845Z',
   dateTo: '2024-10-02T18:45:01.375Z',
@@ -12,7 +11,6 @@ const mockRoutePoints = [{
   type: 'taxi',
 },
 {
-  id: 2,
   basePrice: getRandomNumber(),
   dateFrom: '2024-07-01T07:10:18.845Z',
   dateTo: '2024-07-10T17:15:15.375Z',
@@ -22,7 +20,6 @@ const mockRoutePoints = [{
   type: 'flight',
 },
 {
-  id: 3,
   basePrice: getRandomNumber(),
   dateFrom: '2024-03-02T14:15:16.845Z',
   dateTo: '2024-03-02T17:15:15.375Z',
@@ -32,7 +29,6 @@ const mockRoutePoints = [{
   type: 'bus',
 },
 {
-  id: 4,
   basePrice: getRandomNumber(),
   dateFrom: '2024-06-11T11:32:11.845Z',
   dateTo: '2024-06-11T21:15:12.375Z',
@@ -43,7 +39,10 @@ const mockRoutePoints = [{
 }];
 
 function getRandomPoint() {
-  return getRandomArrayElement(mockRoutePoints);
+  return {
+    id: nanoid(),
+    ...getRandomArrayElement(mockRoutePoints)
+  };
 }
 
 
