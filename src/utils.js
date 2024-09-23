@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import { FilterType } from './const.js';
 dayjs.extend(duration);
 
 const MAX_COUNT_OF_PRICE = 1000;
@@ -44,5 +45,18 @@ function getDifferenceTime(start, end) {
   return parts.join(' ');
 }
 
+const capitalizedFirstLetterOfString = (string) => string.replace(string[0], string[0].toUpperCase());
 
-export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime};
+const isFuturePoint = ({ dateFrom }) => dayjs().isBefore(dateFrom, 'minute');
+const isPresentPoint = ({ dateTo }) => dayjs(dateTo) && dayjs().isAfter(dayjs(dateTo), 'milliseconds');
+const isPastPoint = ({ dateFrom, dateTo }) => dateTo && (dayjs().isSame(dayjs(dateFrom), 'minute') || dayjs().isAfter(dateTo, 'minute'));
+
+const filter = {
+  [FilterType.EVERYTHING]: (points) => points,
+  [FilterType.FUTURE]: (points) => points.filter((point) => isFuturePoint(point)),
+  [FilterType.PRESENT]: (points) => points.filter((point) => isPresentPoint(point)),
+  [FilterType.PAST]: (points) => points.filter((point) => isPastPoint(point)),
+};
+
+
+export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter};

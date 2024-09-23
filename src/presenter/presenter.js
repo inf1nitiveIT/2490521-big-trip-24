@@ -4,6 +4,7 @@ import RoutePointView from '../view/route-point-view.js';
 import SortListView from '../view/sort-view.js';
 //import NewFormView from '../view/create-form-view.js';
 import EditFormView from '../view/edit-form-view.js';
+import EmptyPointsListView from '../view/empty-points-list-view.js';
 
 
 export default class BoardPresenter {
@@ -79,6 +80,10 @@ export default class BoardPresenter {
   #renderPointsList() {
     render(this.#boardComponent, this.#boardContainer);
     render(new SortListView(), this.#boardComponent.element);
+    if (this.#boardPoints.length === 0) {
+      render(new EmptyPointsListView, this.#boardContainer);
+      return;
+    }
     for (let i = 0; i < this.#boardPoints.length; i++) {
       this.#renderPoint({
         offers: this.#offersModel.getOffersByType(this.#boardPoints[i].type),
