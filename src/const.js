@@ -25,4 +25,9 @@ const FilterType = {
   PAST: 'past'
 };
 
-export {PointType, Cities, FilterType};
+const Mode = {
+  DEFAULT: 'DEFAULT',
+  EDITING: 'EDITING',
+};
+
+export {PointType, Cities, FilterType, Mode};
