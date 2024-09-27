@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
-import { FilterType } from './const.js';
+import { FilterType, SortType } from './const.js';
 dayjs.extend(duration);
 
 const MAX_COUNT_OF_PRICE = 1000;
@@ -62,4 +62,31 @@ function updateItem(items, update) {
   return items.map((item) => item.id === update.id ? update : item);
 }
 
-export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter, updateItem};
+function getPointsByDate(pointA, pointB) {
+  return dayjs(pointB.dateFrom).diff(dayjs(pointA.dateFrom));
+}
+
+function getPointsByPrice(pointA, pointB) {
+  return pointB.basePrice - pointA.basePrice;
+}
+
+function getPointsByTime(pointA, pointB) {
+  const pointADuration = dayjs(pointA.dateTo).diff(dayjs(pointA.dateFrom));
+  const pointBDuration = dayjs(pointB.dateTo).diff(dayjs(pointB.dateFrom));
+  return pointBDuration - pointADuration;
+}
+
+// Оптимизированный объект сортировки
+const sorting = {
+  [SortType.DAY]: (points) => points.toSorted(getPointsByDate),
+  [SortType.EVENT]: () => {
+    throw new Error(`Sort by ${SortType.EVENT} is disabled`);
+  },
+  [SortType.TIME]: (points) => points.toSorted(getPointsByTime),
+  [SortType.PRICE]: (points) => points.toSorted(getPointsByPrice),
+  [SortType.OFFERS]: () => {
+    throw new Error(`Sort by ${SortType.OFFERS} is disabled`);
+  }
+};
+
+export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter, updateItem, sorting};

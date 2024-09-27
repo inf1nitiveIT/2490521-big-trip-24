@@ -61,6 +61,11 @@ export default class PointPresenter {
 
   }
 
+  destroy() {
+    remove(this.#pointComponent);
+    remove(this.#editFormComponent);
+  }
+
   resetView() {
     if (this.#mode !== Mode.DEFAULT) {
       this.#replaceEditFormToRoutePoint();
