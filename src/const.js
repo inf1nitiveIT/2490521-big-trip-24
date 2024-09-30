@@ -30,4 +30,24 @@ const Mode = {
   EDITING: 'EDITING',
 };
 
-export {PointType, Cities, FilterType, Mode};
+const SortType = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers'
+};
+const enabledSortType = {
+  [SortType.DAY]: true,
+  [SortType.EVENT]: false,
+  [SortType.TIME]: true,
+  [SortType.PRICE]: true,
+  [SortType.OFFERS]: false,
+};
+
+const Attribute = {
+  CHECKED: 'checked',
+  DISABLED: 'disabled'
+};
+
+export {PointType, Cities, FilterType, Mode, SortType, enabledSortType, Attribute};
