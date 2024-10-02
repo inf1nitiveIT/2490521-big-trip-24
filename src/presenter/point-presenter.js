@@ -30,15 +30,18 @@ export default class PointPresenter {
     this.#pointComponent = new RoutePointView({
       point: this.#point,
       offers: this.#offersModel.getOffersByType(point.type) ,
-      destination: this.#destinationsModel.getDestinationsById(point.destination),
+      destinations: this.#destinationsModel.getDestinationsById(point.destination),
       onEditFormButtonClick: this.#onEditFormButtonClick,
       favoriteClickHandler: this.#favoriteClickHandler
     });
 
+
     this.#editFormComponent = new EditFormView({
       point: this.#point,
-      offers: this.#offersModel.getOffersByType(point.type) ,
-      destination: this.#destinationsModel.getDestinationsById(point.destination),
+      offers: this.#offersModel.getOffersByType(point.type),
+      allOffers: this.#offersModel.offers,
+      destinations: this.#destinationsModel.getDestinationsById(point.destination),
+      allDestinations: this.#destinationsModel.destinations,
       onFormSubmit: this.#onFormSubmit,
       onToggleButtonClick: this.#onToggleButtonClick
     });
