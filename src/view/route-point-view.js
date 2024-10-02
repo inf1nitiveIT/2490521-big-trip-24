@@ -53,19 +53,23 @@ function createNewRoutePointTemplate(point, offers, destination) {
 
 export default class RoutePointView extends AbstractView{
   #point = null;
-  #destination = null;
-  #offers = null;
+  #destinations = [];
+  #offers = [];
   #handleToggleButtonClick = null;
   #favoriteClickHandler = null;
 
-  constructor({point, offers, destination, onEditFormButtonClick, favoriteClickHandler}) {
+  constructor({point, offers, destinations, onEditFormButtonClick, favoriteClickHandler}) {
     super();
     this.#point = point;
     this.#offers = offers;
-    this.#destination = destination;
+    this.#destinations = destinations;
     this.#handleToggleButtonClick = onEditFormButtonClick;
     this.#setEventListeners();
     this.#favoriteClickHandler = favoriteClickHandler;
+  }
+
+  get template() {
+    return createNewRoutePointTemplate(this.#point, this.#offers, this.#destinations);
   }
 
   #setEventListeners() {
@@ -86,9 +90,5 @@ export default class RoutePointView extends AbstractView{
     this.element
       .querySelector('.event__favorite-btn')
       .addEventListener('click', favoriteButtonClickHandler);
-  }
-
-  get template() {
-    return createNewRoutePointTemplate(this.#point, this.#offers, this.#destination);
   }
 }

@@ -5,7 +5,7 @@ import SortPresenter from './sort-presenter.js';
 import EmptyPointsListView from '../view/empty-points-list-view.js';
 import PointPresenter from './point-presenter.js';
 import { updateItem, sorting } from '../utils.js';
-import { SortType, enabledSortType } from '../const.js';
+import { SortType } from '../const.js';
 
 
 export default class BoardPresenter {
@@ -17,14 +17,7 @@ export default class BoardPresenter {
   #boardPoints = [];
   #pointPresenters = new Map;
   #sortPresenter = null;
-  #sortComponent = null;
   #currentSortType = SortType.DAY;
-  #sortTypes = Object.values(SortType).map((type) => (
-    {
-      type,
-      isChecked: type === this.#currentSortType,
-      isDisabled: !enabledSortType[type]
-    }));
 
   constructor({boardContainer, routePointModel, offersModel, destinationsModel}) {
     this.#boardContainer = boardContainer;
