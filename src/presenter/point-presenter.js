@@ -1,7 +1,8 @@
 import RoutePointView from '../view/route-point-view.js';
 import EditFormView from '../view/edit-form-view.js';
 import { remove, render, replace } from '../framework/render.js';
-import { Mode } from '../const.js';
+import { Mode, UserAction, UpdateType } from '../const.js';
+import { isDatesEqual } from '../utils.js';
 
 export default class PointPresenter {
   #boardComponent = null;
@@ -20,19 +21,19 @@ export default class PointPresenter {
     this.#destinationsModel = destinationsModel;
     this.#handleDataChange = onPointChange;
     this.#handleModeChange = onModeChange;
+
   }
 
   init(point) {
     this.#point = point;
     const prevPointComponent = this.#pointComponent;
     const prevFormEditComponent = this.#editFormComponent;
-
     this.#pointComponent = new RoutePointView({
       point: this.#point,
       offers: this.#offersModel.getOffersByType(point.type) ,
       destinations: this.#destinationsModel.getDestinationsById(point.destination),
       onEditFormButtonClick: this.#onEditFormButtonClick,
-      favoriteClickHandler: this.#favoriteClickHandler
+      favoriteClickHandler: this.#favoriteClickHandler,
     });
 
 
@@ -43,7 +44,8 @@ export default class PointPresenter {
       destinations: this.#destinationsModel.getDestinationsById(point.destination),
       allDestinations: this.#destinationsModel.destinations,
       onFormSubmit: this.#onFormSubmit,
-      onToggleButtonClick: this.#onToggleButtonClick
+      onToggleButtonClick: this.#onToggleButtonClick,
+      onFormDelete: this.#handleFormResetDelete
     });
 
     if (!prevPointComponent || !prevFormEditComponent) {
@@ -83,6 +85,27 @@ export default class PointPresenter {
     }
   };
 
+  #handleFormResetDelete = (point) => {
+    this.#handleDataChange(
+      UserAction.DELETE_POINT,
+      UpdateType.MINOR,
+      point
+    );
+    this.#replaceEditFormToRoutePoint();
+  };
+
+  #onFormSubmit = (point) => {
+    const isMinorUpdate = !isDatesEqual(this.#point.dateFrom, point.dateFrom)
+      || !isDatesEqual(this.#point.dateTo, point.dateTo)
+      || this.#point.basePrice !== point.basePrice;
+    this.#handleDataChange(
+      UserAction.UPDATE_POINT,
+      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      point
+    );
+    this.#replaceEditFormToRoutePoint();
+  };
+
   #onEditFormButtonClick = () => {
     this.#replaceRoutePointToEditForm();
     document.addEventListener('keydown', this.#escKeyDownHandler);
@@ -91,11 +114,6 @@ export default class PointPresenter {
   #onToggleButtonClick = () => {
     this.#replaceEditFormToRoutePoint();
     document.removeEventListener('keydown', this.#escKeyDownHandler);
-  };
-
-  #onFormSubmit = () => {
-    this.#onToggleButtonClick();
-    this.#handleDataChange(this.#point);
   };
 
   #replaceRoutePointToEditForm() {
@@ -110,7 +128,11 @@ export default class PointPresenter {
   }
 
   #favoriteClickHandler = () => {
-    this.#handleDataChange({...this.#point, isFavorite: !this.#point.isFavorite});
+    this.#handleDataChange(
+      UserAction.UPDATE_POINT,
+      UpdateType.PATCH,
+      {...this.#point, isFavorite: !this.#point.isFavorite}
+    );
   };
 
 

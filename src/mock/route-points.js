@@ -3,8 +3,8 @@ import { nanoid } from 'nanoid';
 
 const mockRoutePoints = [{
   basePrice: getRandomNumber(),
-  dateFrom: '2024-08-02T18:10:00.845Z',
-  dateTo: '2024-10-02T18:45:01.375Z',
+  dateFrom: '2024-10-02T18:10:00.845Z',
+  dateTo: '2024-11-02T18:45:01.375Z',
   destination: '1',
   isFavorite: getRandomBoolean(),
   offers: ['taxi-1'],
@@ -21,8 +21,8 @@ const mockRoutePoints = [{
 },
 {
   basePrice: getRandomNumber(),
-  dateFrom: '2024-03-02T14:15:16.845Z',
-  dateTo: '2024-03-02T17:15:15.375Z',
+  dateFrom: '2020-03-02T14:15:16.845Z',
+  dateTo: '2020-03-02T17:15:15.375Z',
   destination: '3',
   isFavorite: getRandomBoolean(),
   offers: ['bus-1', 'bus-2'],
@@ -30,8 +30,8 @@ const mockRoutePoints = [{
 },
 {
   basePrice: getRandomNumber(),
-  dateFrom: '2024-06-11T11:32:11.845Z',
-  dateTo: '2024-06-11T21:15:12.375Z',
+  dateFrom: '2027-06-11T11:32:11.845Z',
+  dateTo: '2027-06-11T21:15:12.375Z',
   destination: '4',
   isFavorite: getRandomBoolean(),
   offers: [],

@@ -1,9 +1,21 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { humanizeTaskDueDate } from '../utils.js';
-import { PointType } from '../const.js';
+import { PointType, EditMode} from '../const.js';
 import flatpickr from 'flatpickr';
-
+import { nanoid } from 'nanoid';
+import he from 'he';
 import 'flatpickr/dist/flatpickr.min.css';
+
+const DEFAULT_POINT = {
+  id: nanoid(),
+  basePrice: 0,
+  dateFrom: '',
+  dateTo: '',
+  destination: null,
+  isFavorite: false,
+  offers: [],
+  type: PointType.FLIGHT
+};
 
 function createOfferTemplate({ title, price, checkedAttribute }) {
   const offerClass = title.split(' ').reverse().find((item) => item.length > 3).toLowerCase();
@@ -26,18 +38,18 @@ function createOfferTemplate({ title, price, checkedAttribute }) {
 }
 
 function createAvailableOffersTemplate(point, offers) {
-  if (!offers || offers.length === 0) {
+  if (!offers?.length) {
     return '';
   }
 
   const offersTemplate = offers.map(({ id, title, price }) => {
-    const checkedAttribute = Array.isArray(point.offers) && point.offers.includes(id) ? 'checked' : '';
+    const checkedAttribute = point.offers.find((offer) => offer.id === id) ? 'checked' : '';
     return createOfferTemplate({ title, price, checkedAttribute });
   }).join('');
 
   return `
-    <section class="event__section  event__section--offers">
-      <h3 class="event__section-title  event__section-title--offers">Offers</h3>
+    <section class="event__section event__section--offers">
+      <h3 class="event__section-title event__section-title--offers">Offers</h3>
       <div class="event__available-offers">
         ${offersTemplate}
       </div>
@@ -70,37 +82,47 @@ function createDestinationTemplate(type, destination, destinations) {
       <label class="event__label event__type-output" for="event-destination-1">
         ${type}
       </label>
-      <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination.name}" list="destination-list-1">
+      <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(String(destination.name ?? ''))}" list="destination-list-1" required>
       <datalist id="destination-list-1">
         ${availableDestinations}
       </datalist>
     </div>`;
 }
 
-function createDestinationSectionTemplate(destinationPoint) {
+function createEditPointButtonNegativeTemplate(editMode) {
+  return (
+    editMode === EditMode.ADD
+      ? '<button class="event__reset-btn" type="reset">Cancel</button>'
+      : `<button class="event__reset-btn" type="reset">Delete</button>
+        <button class="event__rollup-btn" type="button">
+          <span class="visually-hidden">Open event</span>
+        </button>`
+  );
+}
 
+function createDestinationSectionTemplate(destinationPoint) {
   const { description: destinationDescription, pictures } = destinationPoint;
-  const photosTemplate = `
-      <div class="event__photos-container">
-        <div class="event__photos-tape">
-          ${pictures.map(({ src, description }) =>
+
+  const photosTemplate = pictures && pictures.length > 0 ? `
+    <div class="event__photos-container">
+      <div class="event__photos-tape">
+        ${pictures.map(({ src, description }) =>
     `<img class="event__photo" src="${src}" alt="${description}"></img>`
   ).join('')}
-        </div>
-      </div>`;
+      </div>
+    </div>` : '';
 
-  if (pictures && pictures.length > 0 || destinationDescription) {
+  if ((pictures && pictures.length > 0) || destinationDescription) {
     return `
-    <section class="event__section event__section--destination">
-      <h3 class="event__section-title event__section-title--destination">Destination</h3>
-      <p class="event__destination-description">${destinationDescription}</p>
-      ${photosTemplate}
-    </section>
-  `;
+      <section class="event__section event__section--destination">
+        <h3 class="event__section-title event__section-title--destination">Destination</h3>
+        <p class="event__destination-description">${destinationDescription}</p>
+        ${photosTemplate}
+      </section>
+    `;
   } else {
     return '';
   }
-
 }
 
 function createTimeTemplate(dateFrom, dateTo) {
@@ -121,11 +143,11 @@ function createPriceTemplate(basePrice) {
         <span class="visually-hidden">Price</span>
         &euro;
       </label>
-      <input class="event__input event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
+      <input class="event__input event__input--price" id="event-price-1" type="number" name="event-price" value="${he.encode(String(basePrice))}" min="1" required>
     </div>`;
 }
 
-function createEditFormTemplate(point) {
+function createEditFormTemplate(point, editMode) {
   const { type, basePrice, dateFrom, dateTo, offers, destination, destinations } = point;
 
   return `
@@ -143,10 +165,8 @@ function createEditFormTemplate(point) {
         ${createTimeTemplate(dateFrom, dateTo)}
         ${createPriceTemplate(basePrice)}
         <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-        <button class="event__reset-btn" type="reset">Delete</button>
-        <button class="event__rollup-btn" type="button">
-          <span class="visually-hidden">Open event</span>
-        </button>
+        ${createEditPointButtonNegativeTemplate(editMode)}
+
       </header>
       <section class="event__details">
         ${createAvailableOffersTemplate(point, offers)}
@@ -166,8 +186,12 @@ export default class EditFormView extends AbstractStatefulView {
   #handleFormSubmit = null;
   #datepickerStart = null;
   #datepickerEnd = null;
+  #handleFormResetDelete = null;
+  #editMode = null;
+  #onSubmitButtonClick = null;
+  #onCancelButtonClick = null;
 
-  constructor({point, destinations, offers, onToggleButtonClick, onFormSubmit, allOffers, allDestinations}) {
+  constructor({point = DEFAULT_POINT, destinations = {}, offers, onToggleButtonClick, onFormSubmit, allOffers, allDestinations, onFormDelete, onSubmitButtonClick, onCancelButtonClick, editMode}) {
     super();
 
     this.#point = point;
@@ -177,12 +201,16 @@ export default class EditFormView extends AbstractStatefulView {
     this.#allDestinations = allDestinations;
     this.#handleToggleButtonClick = onToggleButtonClick;
     this.#handleFormSubmit = onFormSubmit;
+    this.#handleFormResetDelete = onFormDelete;
+    this.#onSubmitButtonClick = onSubmitButtonClick;
+    this.#onCancelButtonClick = onCancelButtonClick;
+    this.#editMode = editMode;
     this._setState(EditFormView.parsePointToState(this.#point, this.#destinations, this.#offers, this.#allDestinations));
     this._restoreHandlers();
   }
 
   get template() {
-    return createEditFormTemplate(this._state);
+    return createEditFormTemplate(this._state, this.#editMode);
   }
 
   _restoreHandlers() {
@@ -224,6 +252,7 @@ export default class EditFormView extends AbstractStatefulView {
     evt.preventDefault();
     const targetType = evt.target.value;
     const { offers: typeOffers = [] } = this.#allOffers.find((item) => item.type === targetType) || {};
+    console.log(targetType, typeOffers)
     this.updateElement({
       type: targetType,
       offers: typeOffers,
@@ -246,24 +275,48 @@ export default class EditFormView extends AbstractStatefulView {
     });
   };
 
+  #formResetDeleteHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormResetDelete(EditFormView.parseStateToPoint(this._state));
+  };
+
+  #newPointSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#onSubmitButtonClick(EditFormView.parseStateToPoint({
+      ...this._state
+    }));
+  };
+
+  #formResetCancelHandler = (evt) => {
+    evt.preventDefault();
+    this.#onCancelButtonClick();
+  };
+
+  #toggleEditFormHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleToggleButtonClick();
+  };
+
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    const offersChecked = Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'));
+    const currentOffers = this.#allOffers.find((offer) => offer.type === this._state.type)?.offers || [];
+
+    this.#handleFormSubmit(EditFormView.parseStateToPoint({
+      ...this._state,
+      offers: currentOffers.map((offer, index) => offersChecked[index] ? offer.id : '').filter(Boolean),
+    }));
+  };
+
   #setEventListeners() {
-    const toggleEditFormHandler = (evt) => {
-      evt.preventDefault();
-      this.#handleToggleButtonClick();
-    };
-
-    const formSubmitHandler = (evt) => {
-      evt.preventDefault();
-      this.#handleFormSubmit();
-    };
-
-    this.element
-      .querySelector('.event__rollup-btn')
-      .addEventListener('click', toggleEditFormHandler);
-
-    this.element
-      .querySelector('.event__save-btn')
-      .addEventListener('submit', formSubmitHandler);
+    if (this.#editMode === EditMode.ADD) {
+      this.element.querySelector('.event__save-btn').addEventListener('click', this.#newPointSubmitHandler);
+      this.element.querySelector('.event__reset-btn').addEventListener('click', this.#formResetCancelHandler);
+    } else {
+      this.element.querySelector('.event__save-btn').addEventListener('click', this.#formSubmitHandler);
+      this.element.querySelector('.event__reset-btn').addEventListener('click', this.#formResetDeleteHandler);
+      this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#toggleEditFormHandler);
+    }
 
     this.element
       .querySelector('.event__type-group')
@@ -276,6 +329,7 @@ export default class EditFormView extends AbstractStatefulView {
     this.element
       .querySelector('.event__input--price')
       .addEventListener('change', this.#pointPriceChangeHandler);
+
 
     this.#setDatepickerStart();
     this.#setDatepickerEnd();
@@ -293,25 +347,12 @@ export default class EditFormView extends AbstractStatefulView {
   }
 
   static parseStateToPoint(state) {
-
-    if (!state.destination) {
-      state.destination = [];
-    }
-
-    if (!state.offers) {
-      state.offers = [];
-    }
-
-    if (!state.destinations) {
-      state.destinations = [];
-    }
-
-
-    delete state.offers;
-    delete state.destination;
-    delete state.destinations;
-
-    return state;
+    return {
+      ...state,
+      offers: state.offers || [],
+      destination: state.destination.id || null,
+      destinations: state.destinations || []
+    };
   }
 
 

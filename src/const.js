@@ -30,6 +30,11 @@ const Mode = {
   EDITING: 'EDITING',
 };
 
+const EditMode = {
+  ADD: 'ADD',
+  EDIT: 'EDIT'
+};
+
 const SortType = {
   DAY: 'day',
   EVENT: 'event',
@@ -50,4 +55,24 @@ const Attribute = {
   DISABLED: 'disabled'
 };
 
-export {PointType, Cities, FilterType, Mode, SortType, enabledSortType, Attribute};
+const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+
+const MessageTextType = {
+  [FilterType.EVERYTHING]: 'Click New Event to create your first point',
+  [FilterType.FUTURE]: 'There are no future events now',
+  [FilterType.PRESENT]: 'There are no present events now',
+  [FilterType.PAST]: 'There are no past events now',
+
+};
+
+const UserAction = {
+  UPDATE_POINT: 'UPDATE_POINT',
+  ADD_POINT: 'ADD_POINT',
+  DELETE_POINT: 'DELETE_POINT',
+};
+
+export {PointType, Cities, FilterType, Mode, EditMode, SortType, enabledSortType, Attribute, UpdateType, MessageTextType, UserAction};
