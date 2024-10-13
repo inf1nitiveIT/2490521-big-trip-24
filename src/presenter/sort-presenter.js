@@ -1,5 +1,5 @@
 import SortListView from '../view/sort-view.js';
-import { render, RenderPosition } from '../framework/render.js';
+import { render, RenderPosition, remove } from '../framework/render.js';
 import { SortType, enabledSortType } from '../const.js';
 
 export default class SortPresenter {
@@ -34,5 +34,9 @@ export default class SortPresenter {
     });
 
     render(this.#sortComponent, this.#boardContainer, RenderPosition.AFTERBEGIN);
+  }
+
+  remove() {
+    remove(this.#sortComponent);
   }
 }

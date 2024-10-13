@@ -1,7 +1,9 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import isBetween from 'dayjs/plugin/isBetween';
 import { FilterType, SortType } from './const.js';
 dayjs.extend(duration);
+dayjs.extend(isBetween);
 
 const MAX_COUNT_OF_PRICE = 1000;
 
@@ -48,7 +50,7 @@ function getDifferenceTime(start, end) {
 const capitalizedFirstLetterOfString = (string) => string.replace(string[0], string[0].toUpperCase());
 
 const isFuturePoint = ({ dateFrom }) => dayjs().isBefore(dateFrom, 'minute');
-const isPresentPoint = ({ dateTo }) => dayjs(dateTo) && dayjs().isAfter(dayjs(dateTo), 'milliseconds');
+const isPresentPoint = ({ dateFrom, dateTo }) => dayjs().isBetween(dayjs(dateFrom), dayjs(dateTo));
 const isPastPoint = ({ dateFrom, dateTo }) => dateTo && (dayjs().isSame(dayjs(dateFrom), 'minute') || dayjs().isAfter(dateTo, 'minute'));
 
 const filter = {
@@ -76,7 +78,8 @@ function getPointsByTime(pointA, pointB) {
   return pointBDuration - pointADuration;
 }
 
-// Оптимизированный объект сортировки
+const isDatesEqual = (dateA, dateB) => (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
+
 const sorting = {
   [SortType.DAY]: (points) => points.toSorted(getPointsByDate),
   [SortType.EVENT]: () => {
@@ -89,4 +92,4 @@ const sorting = {
   }
 };
 
-export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter, updateItem, sorting};
+export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter, updateItem, sorting, getPointsByDate, getPointsByPrice, getPointsByTime, isDatesEqual};
