@@ -2,12 +2,10 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { humanizeTaskDueDate } from '../utils.js';
 import { PointType, EditMode} from '../const.js';
 import flatpickr from 'flatpickr';
-import { nanoid } from 'nanoid';
 import he from 'he';
 import 'flatpickr/dist/flatpickr.min.css';
 
 const DEFAULT_POINT = {
-  id: nanoid(),
   basePrice: 0,
   dateFrom: '',
   dateTo: '',
@@ -147,8 +145,8 @@ function createPriceTemplate(basePrice) {
     </div>`;
 }
 
-function createEditFormTemplate(point, editMode) {
-  const { type, basePrice, dateFrom, dateTo, offers, destination, destinations } = point;
+function createEditFormTemplate(point, allDestinations, editMode) {
+  const { type, basePrice, dateFrom, dateTo, offers, destination } = point;
 
   return `
     <form class="event event--edit" action="#" method="post">
@@ -161,7 +159,7 @@ function createEditFormTemplate(point, editMode) {
           <input class="event__type-toggle visually-hidden" id="event-type-toggle-1" type="checkbox">
           ${createEventTypeTemplate(type)}
         </div>
-        ${createDestinationTemplate(type, destination, destinations)}
+        ${createDestinationTemplate(type, destination, allDestinations)}
         ${createTimeTemplate(dateFrom, dateTo)}
         ${createPriceTemplate(basePrice)}
         <button class="event__save-btn btn btn--blue" type="submit">Save</button>
@@ -205,12 +203,12 @@ export default class EditFormView extends AbstractStatefulView {
     this.#onSubmitButtonClick = onSubmitButtonClick;
     this.#onCancelButtonClick = onCancelButtonClick;
     this.#editMode = editMode;
-    this._setState(EditFormView.parsePointToState(this.#point, this.#destinations, this.#offers, this.#allDestinations));
+    this._setState(EditFormView.parsePointToState(this.#point, this.#destinations, this.#offers));
     this._restoreHandlers();
   }
 
   get template() {
-    return createEditFormTemplate(this._state, this.#editMode);
+    return createEditFormTemplate(this._state, this.#allDestinations, this.#editMode);
   }
 
   _restoreHandlers() {
@@ -269,8 +267,9 @@ export default class EditFormView extends AbstractStatefulView {
 
   #pointPriceChangeHandler = (evt) => {
     evt.preventDefault();
+    const price = parseInt(evt.target.value, 10);
     this.updateElement({
-      basePrice: evt.target.value
+      basePrice: price
     });
   };
 
@@ -300,7 +299,6 @@ export default class EditFormView extends AbstractStatefulView {
     evt.preventDefault();
     const offersChecked = Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'));
     const currentOffers = this.#allOffers.find((offer) => offer.type === this._state.type)?.offers || [];
-
     this.#handleFormSubmit(EditFormView.parseStateToPoint({
       ...this._state,
       offers: currentOffers.map((offer, index) => offersChecked[index] ? offer.id : '').filter(Boolean),
@@ -335,13 +333,11 @@ export default class EditFormView extends AbstractStatefulView {
 
   }
 
-  static parsePointToState(point, destination, offers, destinations) {
-
+  static parsePointToState(point, destination, offers) {
     return {
       ...point,
       destination,
       offers,
-      destinations
     };
   }
 
@@ -350,7 +346,6 @@ export default class EditFormView extends AbstractStatefulView {
       ...state,
       offers: state.offers || [],
       destination: state.destination.id || null,
-      destinations: state.destinations || []
     };
   }
 

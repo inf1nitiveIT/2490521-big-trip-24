@@ -3,14 +3,14 @@ import BoardView from '../view/board-view.js';
 import MessageFilterView from '../view/message-filter-view.js';
 import SortPresenter from './sort-presenter.js';
 import CreateNewPointPresenter from './create-new-point-presenter.js';
-//import NewFormView from '../view/create-form-view.js';
-import EmptyPointsListView from '../view/empty-points-list-view.js';
+import LoadingMessageView from '../view/loading-message-view.js';
 import PointPresenter from './point-presenter.js';
 import { updateItem, sorting, filter, getPointsByDate, getPointsByPrice, getPointsByTime } from '../utils.js';
 import { SortType, UpdateType, FilterType, UserAction } from '../const.js';
 
 export default class BoardPresenter {
   #boardComponent = new BoardView();
+  #loadingComponent = new LoadingMessageView();
   #boardContainer = null;
   #routePointModel = [];
   #offersModel = [];
@@ -24,6 +24,7 @@ export default class BoardPresenter {
   #filterType = FilterType.EVERYTHING;
   #isAddPointFormOpened = false;
   #messageComponent = null;
+  #isLoading = true;
 
 
   constructor({boardContainer, routePointModel, offersModel, destinationsModel, filterModel, onCreateEventDestroy}) {
@@ -63,8 +64,7 @@ export default class BoardPresenter {
 
   init() {
     this.#boardPoints = [...this.#routePointModel.points];
-    this.#renderPointsList();
-    this.#renderSort();
+    this.#renderApp();
   }
 
   createPoint() {
@@ -88,15 +88,6 @@ export default class BoardPresenter {
   };
 
 
-  #renderPointsList() {
-    render(this.#boardComponent, this.#boardContainer);
-    this.#handleSortTypeChange(this.#currentSortType);
-
-    if (this.#boardPoints.length === 0) {
-      render(new EmptyPointsListView(), this.#boardContainer);
-    }
-  }
-
   #renderPoints() {
 
     this.points.forEach((point) => {
@@ -119,6 +110,10 @@ export default class BoardPresenter {
 
   }
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#boardContainer);
+  }
+
   #clearPoints() {
     this.#pointPresenters.forEach((presenter) => {
       presenter.destroy();
@@ -129,10 +124,16 @@ export default class BoardPresenter {
     this.#messageComponent = new MessageFilterView({
       filterType: this.#filterType
     });
+    this.#renderSort();
     render(this.#messageComponent, this.#boardContainer);
   }
 
   #renderApp() {
+    if(this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (!this.points.length && !this.#isAddPointFormOpened) {
       this.#renderMessage();
       return;
@@ -163,10 +164,6 @@ export default class BoardPresenter {
     this.#renderPoints();
   };
 
-  #handlePointChange = (updatedPoint) => {
-    this.#boardPoints = updateItem(this.#boardPoints, updatedPoint);
-    this.#pointPresenters.get(updatedPoint.id).init(updatedPoint);
-  };
 
   #handleModeChange = () => {
     this.#pointPresenters.forEach((presenter) => {
@@ -174,8 +171,12 @@ export default class BoardPresenter {
     });
   };
 
-  #handleViewAction = (actionType, updateType, update) => {
+  #handlePointChange = (updatedPoint) => {
+    this.#boardPoints = updateItem(this.#boardPoints, updatedPoint);
+    this.#pointPresenters.get(updatedPoint.id).init(updatedPoint);
+  };
 
+  #handleViewAction = (actionType, updateType, update) => {
     switch (actionType) {
       case UserAction.UPDATE_POINT:
         this.#routePointModel.updatePoint(updateType, update);
@@ -200,6 +201,11 @@ export default class BoardPresenter {
         break;
       case UpdateType.MAJOR:
         this.#clearApp({resetSortType: true});
+        this.#renderApp();
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
         this.#renderApp();
         break;
     }
