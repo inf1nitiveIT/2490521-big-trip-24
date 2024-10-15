@@ -44,7 +44,7 @@ function createNewRoutePointTemplate(point, availableOffers, destination) {
       </p>
       <h4 class="visually-hidden">Offers:</h4>
       <ul class="event__selected-offers">
-        ${createEventOffersTemplate(selectedOffers)} <!-- Отображаем только выбранные офферы -->
+        ${createEventOffersTemplate(selectedOffers)}
       </ul>
       <button class="${favoriteClassName}" type="button">
         <span class="visually-hidden">Add to favorite</span>

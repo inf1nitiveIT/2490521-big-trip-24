@@ -134,6 +134,4 @@ export default class PointPresenter {
       {...this.#point, isFavorite: !this.#point.isFavorite}
     );
   };
-
-
 }
