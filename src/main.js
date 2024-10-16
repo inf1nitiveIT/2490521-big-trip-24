@@ -24,8 +24,9 @@ const boardPresenter = new BoardPresenter({boardContainer: siteSortElement, rout
 const filterPresenter = new FilterPresenter({filterContainer: filterElement, filterModel, routePointModel});
 
 const createEventButtonViewComponent = new CreatePointButtonView({
-  onButtonClick: handleCreateEventButtonClick
+  onButtonClick: handleCreateEventButtonClick,
 });
+createEventButtonViewComponent.element.disabled = true;
 
 function handleCreateEventButtonClick(){
   boardPresenter.createPoint();
@@ -41,3 +42,4 @@ filterPresenter.init();
 boardPresenter.init();
 routePointModel.init();
 
+export {createEventButtonViewComponent};

@@ -15,19 +15,20 @@ const DEFAULT_POINT = {
   type: PointType.FLIGHT
 };
 
-function createOfferTemplate({ title, price, checkedAttribute }) {
-  const offerClass = title.split(' ').reverse().find((item) => item.length > 3).toLowerCase();
+function createOfferTemplate({ title, price, checkedAttribute, id }) {
+
 
   return `
     <div class="event__offer-selector">
       <input
         class="event__offer-checkbox visually-hidden"
-        id="event-offer-${offerClass}-1"
+        id="event-offer-${id}-1"
         type="checkbox"
-        name="event-offer-${offerClass}"
+        data-offer-id="${id}"
+        name="event-offer-${id}"
         ${checkedAttribute}
       >
-      <label class="event__offer-label" for="event-offer-${offerClass}-1">
+      <label class="event__offer-label" for="event-offer-${id}-1">
         <span class="event__offer-title">${title}</span>
         &plus;&euro;&nbsp;
         <span class="event__offer-price">${price}</span>
@@ -41,8 +42,8 @@ function createAvailableOffersTemplate(point, offers) {
   }
 
   const offersTemplate = offers.map(({ id, title, price }) => {
-    const checkedAttribute = point.offers.find((offer) => offer.id === id) ? 'checked' : '';
-    return createOfferTemplate({ title, price, checkedAttribute });
+    const checkedAttribute = point.offers.find((offerId) => offerId === id) ? 'checked' : '';
+    return createOfferTemplate({ title, price, checkedAttribute, id });
   }).join('');
 
   return `
@@ -87,11 +88,11 @@ function createDestinationTemplate(type, destination, destinations) {
     </div>`;
 }
 
-function createEditPointButtonNegativeTemplate(editMode) {
+function createEditPointButtonNegativeTemplate(editMode, isDisabled, isDeleting) {
   return (
     editMode === EditMode.ADD
-      ? '<button class="event__reset-btn" type="reset">Cancel</button>'
-      : `<button class="event__reset-btn" type="reset">Delete</button>
+      ? `<button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>Cancel</button>`
+      : `<button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : 'Delete'}</button>
         <button class="event__rollup-btn" type="button">
           <span class="visually-hidden">Open event</span>
         </button>`
@@ -146,9 +147,9 @@ function createPriceTemplate(basePrice) {
 }
 
 function createEditFormTemplate(point, allDestinations, editMode) {
-  const { type, basePrice, dateFrom, dateTo, offers, destination } = point;
-
+  const { type, basePrice, dateFrom, dateTo, allAvailableOffers, destination, isDisabled, isSaving, isDeleting } = point;
   return `
+  <li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
         <div class="event__type-wrapper">
@@ -162,21 +163,22 @@ function createEditFormTemplate(point, allDestinations, editMode) {
         ${createDestinationTemplate(type, destination, allDestinations)}
         ${createTimeTemplate(dateFrom, dateTo)}
         ${createPriceTemplate(basePrice)}
-        <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-        ${createEditPointButtonNegativeTemplate(editMode)}
+        <button class="event__save-btn  btn  btn--blue" type="submit"${isDisabled ? 'disabled' : ''}>${isSaving ? 'Saving...' : 'Save'}</button>
+        ${createEditPointButtonNegativeTemplate(editMode, isDisabled, isDeleting)}
 
       </header>
       <section class="event__details">
-        ${createAvailableOffersTemplate(point, offers)}
+        ${createAvailableOffersTemplate(point, allAvailableOffers)}
         ${createDestinationSectionTemplate(destination)}
       </section>
     </form>
+    </li>
   `;
 }
 
 export default class EditFormView extends AbstractStatefulView {
   #point = null;
-  #destinations = [];
+  #destination = null;
   #offers = [];
   #allOffers = [];
   #allDestinations = [];
@@ -193,7 +195,7 @@ export default class EditFormView extends AbstractStatefulView {
     super();
 
     this.#point = point;
-    this.#destinations = destinations;
+    this.#destination = destinations;
     this.#offers = offers;
     this.#allOffers = allOffers;
     this.#allDestinations = allDestinations;
@@ -203,12 +205,20 @@ export default class EditFormView extends AbstractStatefulView {
     this.#onSubmitButtonClick = onSubmitButtonClick;
     this.#onCancelButtonClick = onCancelButtonClick;
     this.#editMode = editMode;
-    this._setState(EditFormView.parsePointToState(this.#point, this.#destinations, this.#offers));
-    this._restoreHandlers();
+    this._setState(EditFormView.parsePointToState(this.#point, this.#destination, this.#offers));
+    this.#setEventListeners();
   }
 
   get template() {
     return createEditFormTemplate(this._state, this.#allDestinations, this.#editMode);
+  }
+
+  reset(point) {
+    this.updateElement({
+      ...point,
+      destination: this.#allDestinations.find((destination) => destination.id === point.destination),
+
+    });
   }
 
   _restoreHandlers() {
@@ -252,7 +262,7 @@ export default class EditFormView extends AbstractStatefulView {
     const { offers: typeOffers = [] } = this.#allOffers.find((item) => item.type === targetType) || {};
     this.updateElement({
       type: targetType,
-      offers: typeOffers,
+      allAvailableOffers: typeOffers,
     });
   };
 
@@ -275,7 +285,7 @@ export default class EditFormView extends AbstractStatefulView {
 
   #formResetDeleteHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormResetDelete(EditFormView.parseStateToPoint(this._state));
+    this.#handleFormResetDelete(EditFormView.parseStateToPoint({...this._state}));
   };
 
   #newPointSubmitHandler = (evt) => {
@@ -297,20 +307,24 @@ export default class EditFormView extends AbstractStatefulView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    const offersChecked = Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'));
-    const currentOffers = this.#allOffers.find((offer) => offer.type === this._state.type)?.offers || [];
     this.#handleFormSubmit(EditFormView.parseStateToPoint({
       ...this._state,
-      offers: currentOffers.map((offer, index) => offersChecked[index] ? offer.id : '').filter(Boolean),
     }));
+  };
+
+  #offerChangeHandler = () => {
+    const checkedOffers = Array.from(this.element.querySelectorAll('.event__offer-checkbox:checked'));
+    this._setState({
+      offers: checkedOffers.map((offer) => offer.dataset.offerId)
+    });
   };
 
   #setEventListeners() {
     if (this.#editMode === EditMode.ADD) {
-      this.element.querySelector('.event__save-btn').addEventListener('click', this.#newPointSubmitHandler);
+      this.element.querySelector('.event--edit').addEventListener('submit', this.#newPointSubmitHandler);
       this.element.querySelector('.event__reset-btn').addEventListener('click', this.#formResetCancelHandler);
     } else {
-      this.element.querySelector('.event__save-btn').addEventListener('click', this.#formSubmitHandler);
+      this.element.querySelector('.event--edit').addEventListener('submit', this.#formSubmitHandler);
       this.element.querySelector('.event__reset-btn').addEventListener('click', this.#formResetDeleteHandler);
       this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#toggleEditFormHandler);
     }
@@ -327,6 +341,10 @@ export default class EditFormView extends AbstractStatefulView {
       .querySelector('.event__input--price')
       .addEventListener('change', this.#pointPriceChangeHandler);
 
+    this.element
+      .querySelector('.event__available-offers')
+      ?.addEventListener('change', this.#offerChangeHandler);
+
 
     this.#setDatepickerStart();
     this.#setDatepickerEnd();
@@ -337,15 +355,22 @@ export default class EditFormView extends AbstractStatefulView {
     return {
       ...point,
       destination,
-      offers,
+      allAvailableOffers: offers,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false
     };
   }
 
   static parseStateToPoint(state) {
+
+    delete state.allAvailableOffers;
+    delete state.isDisabled;
+    delete state.isSaving;
+    delete state.isDeleting;
     return {
       ...state,
-      offers: state.offers || [],
-      destination: state.destination.id || null,
+      destination: state.destination.id,
     };
   }
 

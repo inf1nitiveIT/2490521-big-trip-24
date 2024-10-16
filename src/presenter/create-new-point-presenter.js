@@ -1,8 +1,6 @@
-import { render, RenderPosition, remove } from '../framework/render';
-import { UserAction, UpdateType, EditMode } from '../const';
-import { nanoid } from 'nanoid';
-import EditFormView from '../view/edit-form-view';
-//import NewFormView from '../view/create-form-view';
+import { render, RenderPosition, remove } from '../framework/render.js';
+import { UserAction, UpdateType, EditMode } from '../const.js';
+import EditFormView from '../view/edit-form-view.js';
 
 export default class CreateNewPointPresenter {
   #pointListContainer = null;
@@ -26,10 +24,10 @@ export default class CreateNewPointPresenter {
     if (this.#pointAddComponent !== null) {
       return;
     }
-
     this.#pointAddComponent = new EditFormView({
       allDestinations: this.#destinationsModel.destinations,
       allOffers: this.#offersModel.offers,
+      offers: this.#offersModel.offers.find((offer) => offer.type === 'flight')?.offers || [],
       editMode: EditMode.ADD,
       onSubmitButtonClick: this.#handleFormSubmit,
       onCancelButtonClick: this.#handleCancelClick,
@@ -53,13 +51,30 @@ export default class CreateNewPointPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
+  setSaving() {
+    this.#pointAddComponent.updateElement({
+      isDisabled: true,
+      isSaving: true
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this.#pointAddComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false
+      });
+    };
+    this.#pointAddComponent.shake(resetFormState);
+  }
+
   #handleFormSubmit = (point) => {
     this.#handleDataChange(
       UserAction.ADD_POINT,
       UpdateType.MINOR,
-      {id: nanoid(), ...point},
+      {...point},
     );
-    this.destroy();
   };
 
   #handleCancelClick = () => {

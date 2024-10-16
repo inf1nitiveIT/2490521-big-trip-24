@@ -2,15 +2,19 @@ import { render, remove } from '../framework/render.js';
 import BoardView from '../view/board-view.js';
 import MessageFilterView from '../view/message-filter-view.js';
 import SortPresenter from './sort-presenter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import CreateNewPointPresenter from './create-new-point-presenter.js';
 import LoadingMessageView from '../view/loading-message-view.js';
+import ErrorLoadView from '../view/error-load-view.js';
 import PointPresenter from './point-presenter.js';
-import { updateItem, sorting, filter, getPointsByDate, getPointsByPrice, getPointsByTime } from '../utils.js';
-import { SortType, UpdateType, FilterType, UserAction } from '../const.js';
+import { sorting, filter, getPointsByDate, getPointsByPrice, getPointsByTime } from '../utils.js';
+import { SortType, UpdateType, FilterType, UserAction, TimeLimit } from '../const.js';
+import { createEventButtonViewComponent } from '../main.js';
 
 export default class BoardPresenter {
   #boardComponent = new BoardView();
   #loadingComponent = new LoadingMessageView();
+  #errorComponent = new ErrorLoadView();
   #boardContainer = null;
   #routePointModel = [];
   #offersModel = [];
@@ -25,6 +29,11 @@ export default class BoardPresenter {
   #isAddPointFormOpened = false;
   #messageComponent = null;
   #isLoading = true;
+  #isError = false;
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER,
+    upperLimit: TimeLimit.UPPER
+  });
 
 
   constructor({boardContainer, routePointModel, offersModel, destinationsModel, filterModel, onCreateEventDestroy}) {
@@ -70,7 +79,7 @@ export default class BoardPresenter {
   createPoint() {
     this.#currentSortType = SortType.DAY;
     this.#filtersModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
-    this.#newPointPresenter.init();
+    this.#newPointPresenter.init(this.points);
   }
 
 
@@ -84,7 +93,7 @@ export default class BoardPresenter {
 
   #sortPoints = (sortType) => {
     this.#currentSortType = sortType;
-    this.#boardPoints = sorting[this.#currentSortType](this.#boardPoints);
+    this.#boardPoints = sorting[this.#currentSortType](this.points);
   };
 
 
@@ -108,6 +117,10 @@ export default class BoardPresenter {
     pointPresenter.init(point);
     this.#pointPresenters.set(point.id, pointPresenter);
 
+  }
+
+  #renderError() {
+    render(this.#errorComponent, this.#boardContainer);
   }
 
   #renderLoading() {
@@ -134,11 +147,18 @@ export default class BoardPresenter {
       return;
     }
 
+    if (this.#isError) {
+      this.#renderError();
+      return;
+    }
+
     if (!this.points.length && !this.#isAddPointFormOpened) {
       this.#renderMessage();
       return;
     }
 
+
+    createEventButtonViewComponent.element.disabled = false;
     this.#renderSort();
     render(this.#boardComponent, this.#boardContainer);
     this.#renderPoints();
@@ -171,23 +191,36 @@ export default class BoardPresenter {
     });
   };
 
-  #handlePointChange = (updatedPoint) => {
-    this.#boardPoints = updateItem(this.#boardPoints, updatedPoint);
-    this.#pointPresenters.get(updatedPoint.id).init(updatedPoint);
-  };
-
-  #handleViewAction = (actionType, updateType, update) => {
+  #handleViewAction = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
     switch (actionType) {
       case UserAction.UPDATE_POINT:
-        this.#routePointModel.updatePoint(updateType, update);
+        this.#pointPresenters.get(update.id).setSaving();
+        try {
+          await this.#routePointModel.updatePoint(updateType, update);
+        } catch (error) {
+          this.#pointPresenters.get(update.id).setAborting();
+        }
         break;
       case UserAction.ADD_POINT:
-        this.#routePointModel.addPoint(updateType, update);
+        this.#newPointPresenter.setSaving();
+        try {
+          await this.#routePointModel.addPoint(updateType, update);
+          this.#newPointPresenter.destroy();
+        } catch (error) {
+          this.#newPointPresenter.setAborting();
+        }
         break;
       case UserAction.DELETE_POINT:
-        this.#routePointModel.deletePoint(updateType, update);
+        this.#pointPresenters.get(update.id).setDeleting();
+        try {
+          await this.#routePointModel.deletePoint(updateType, update);
+        } catch (error) {
+          this.#pointPresenters.get(update.id).setAborting();
+        }
         break;
     }
+    this.#uiBlocker.unblock();
   };
 
   #handleModelEvent = (updateType, data) => {
@@ -206,6 +239,12 @@ export default class BoardPresenter {
       case UpdateType.INIT:
         this.#isLoading = false;
         remove(this.#loadingComponent);
+        this.#renderApp();
+        break;
+      case UpdateType.ERROR:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#isError = true;
         this.#renderApp();
         break;
     }

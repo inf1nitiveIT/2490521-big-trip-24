@@ -72,14 +72,51 @@ export default class PointPresenter {
   }
 
   resetView() {
-    if (this.#mode !== Mode.DEFAULT) {
+    if (this.#mode === Mode.EDITING) {
+      this.#editFormComponent.reset(this.#point);
       this.#replaceEditFormToRoutePoint();
     }
+  }
+
+  setSaving() {
+    if (this.#mode === Mode.EDITING) {
+      this.#editFormComponent.updateElement({
+        isDisabled: true,
+        isSaving: true,
+      });
+    }
+  }
+
+  setDeleting() {
+    if (this.#mode === Mode.EDITING) {
+      this.#editFormComponent.updateElement({
+        isDisabled: true,
+        isDeleting: true,
+      });
+    }
+  }
+
+  setAborting() {
+    if (this.#mode === Mode.DEFAULT) {
+      this.#pointComponent.shake();
+      return;
+    }
+
+    const resetFormState = () => {
+      this.#editFormComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#editFormComponent.shake(resetFormState);
   }
 
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      this.#editFormComponent.reset(this.#point);
       this.#replaceEditFormToRoutePoint();
       document.removeEventListener('keydown', this.#escKeyDownHandler);
     }
@@ -91,7 +128,7 @@ export default class PointPresenter {
       UpdateType.MINOR,
       point
     );
-    this.#replaceEditFormToRoutePoint();
+
   };
 
   #onFormSubmit = (point) => {
@@ -103,7 +140,6 @@ export default class PointPresenter {
       isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
       point
     );
-    this.#replaceEditFormToRoutePoint();
   };
 
   #onEditFormButtonClick = () => {
@@ -112,6 +148,7 @@ export default class PointPresenter {
   };
 
   #onToggleButtonClick = () => {
+    this.#editFormComponent.reset(this.#point);
     this.#replaceEditFormToRoutePoint();
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
@@ -135,3 +172,4 @@ export default class PointPresenter {
     );
   };
 }
+
