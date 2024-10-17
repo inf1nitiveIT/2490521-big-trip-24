@@ -1,6 +1,5 @@
 import AbstractView from '../framework/view/abstract-view';
-import { humanizeTaskDueDate } from '../utils.js';
-import { getDifferenceTime } from '../utils.js';
+import { humanizeTaskDueDate, getDifferenceTime } from '../utils.js';
 
 const createEventOffersTemplate = (offers) => {
   if (!offers.length) {
@@ -21,7 +20,6 @@ function createNewRoutePointTemplate(point, availableOffers, destination) {
   const date = humanizeTaskDueDate(dateFrom, 'MMM DD');
   const favoriteClassName = isFavorite ? 'event__favorite-btn event__favorite-btn--active' : 'event__favorite-btn';
   const eventDuration = getDifferenceTime(dateFrom, dateTo);
-
   const selectedOffers = availableOffers.filter(({ id }) => point.offers?.includes(id));
 
   return (`
@@ -61,23 +59,23 @@ function createNewRoutePointTemplate(point, availableOffers, destination) {
 
 export default class RoutePointView extends AbstractView{
   #point = null;
-  #destinations = [];
+  #destination = null;
   #offers = [];
   #handleToggleButtonClick = null;
-  #favoriteClickHandler = null;
+  #handleFavoriteButtonClick = null;
 
-  constructor({point, offers, destinations, onEditFormButtonClick, favoriteClickHandler}) {
+  constructor({point, offers, destination, onEditFormButtonClick, onFavoriteButtonClick}) {
     super();
     this.#point = point;
     this.#offers = offers;
-    this.#destinations = destinations;
+    this.#destination = destination;
     this.#handleToggleButtonClick = onEditFormButtonClick;
     this.#setEventListeners();
-    this.#favoriteClickHandler = favoriteClickHandler;
+    this.#handleFavoriteButtonClick = onFavoriteButtonClick;
   }
 
   get template() {
-    return createNewRoutePointTemplate(this.#point, this.#offers, this.#destinations);
+    return createNewRoutePointTemplate(this.#point, this.#offers, this.#destination);
   }
 
   #setEventListeners() {
@@ -88,7 +86,7 @@ export default class RoutePointView extends AbstractView{
 
     const favoriteButtonClickHandler = (evt) => {
       evt.preventDefault();
-      this.#favoriteClickHandler();
+      this.#handleFavoriteButtonClick();
     };
 
     this.element

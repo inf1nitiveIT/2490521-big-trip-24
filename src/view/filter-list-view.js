@@ -20,8 +20,8 @@ function getFilterTemplate({ type, count, isChecked, isDisabled }) {
   `;
 }
 
-function createFilterListTemplate(filters, isDisabled) {
-  const filteringTemplates = filters.map((filter) => getFilterTemplate({ ...filter, isDisabled })).join('');
+function createFilterListTemplate(filters) {
+  const filteringTemplates = filters.map((filter) => getFilterTemplate(filter)).join('');
   return `
     <form class="trip-filters" action="#" method="get">
       ${filteringTemplates}
@@ -56,6 +56,5 @@ export default class FilterListView extends AbstractView{
 
   #setEventListeners(){
     this.element.addEventListener('change', this.#filterTypeChangeHandler);
-
   }
 }

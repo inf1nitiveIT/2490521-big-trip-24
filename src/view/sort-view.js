@@ -1,5 +1,4 @@
 import AbstractView from '../framework/view/abstract-view';
-import { Attribute } from '../const';
 
 function createSortItemTemplate({ type, isChecked, isDisabled }) {
   return `
@@ -11,8 +10,8 @@ function createSortItemTemplate({ type, isChecked, isDisabled }) {
         name="trip-sort"
         value="sort-${type}"
         data-sort-type="${type}"
-        ${isChecked ? Attribute.CHECKED : ''}
-        ${isDisabled ? Attribute.DISABLED : ''}>
+        ${isChecked ? 'checked' : ''}
+        ${isDisabled ? 'disabled' : ''}>
       <label class="trip-sort__btn" for="sort-${type}">${type}</label>
     </div>`;
 }
@@ -26,12 +25,12 @@ function createSortListTemplate(sorts) {
 
 export default class SortListView extends AbstractView {
   #sortTypes = [];
-  #onSortTypeChange = null;
+  #handleSortTypeChange = null;
 
   constructor({ sortTypes, onSortTypeChange }) {
     super();
     this.#sortTypes = sortTypes;
-    this.#onSortTypeChange = onSortTypeChange;
+    this.#handleSortTypeChange = onSortTypeChange;
     this.#setEventListeners();
   }
 
@@ -39,14 +38,14 @@ export default class SortListView extends AbstractView {
     return createSortListTemplate(this.#sortTypes);
   }
 
-  #setEventListeners() {
-    this.element.addEventListener('change', this.#sortTypeChangeHandler);
-  }
-
   #sortTypeChangeHandler = (evt) => {
     if (evt.target.tagName === 'INPUT') {
       evt.preventDefault();
-      this.#onSortTypeChange(evt.target.dataset.sortType);
+      this.#handleSortTypeChange(evt.target.dataset.sortType);
     }
   };
+
+  #setEventListeners() {
+    this.element.addEventListener('change', this.#sortTypeChangeHandler);
+  }
 }

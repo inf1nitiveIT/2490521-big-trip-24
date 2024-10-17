@@ -10,7 +10,6 @@ export default class OffersModel extends Observable {
     this.#pointsApiSevrice = pointsApiService;
   }
 
-
   get offers() {
     return this.#offers;
   }
@@ -28,5 +27,4 @@ export default class OffersModel extends Observable {
     const foundItem = this.offers.find((item) => item.type === type);
     return foundItem ? foundItem.offers : [];
   }
-
 }

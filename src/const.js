@@ -1,3 +1,9 @@
+const DESTINATIONS_COUNT = 3;
+const DEFAULT_PRICE = 0;
+const AUTHTORIZATION = 'Basic 2rHj3c1Jlz0Ks36';
+const END_POINT = 'https://24.objects.htmlacademy.pro/big-trip';
+
+
 const PointType = {
   TAXI: 'taxi',
   BUS: 'bus',
@@ -10,12 +16,14 @@ const PointType = {
   RESTAURANT: 'restaurant'
 };
 
-const Cities = {
-  MEXICO: 'Mexico',
-  CHAMONIX: 'Chamonix',
-  AMSTERDAM: 'Amsterdam',
-  GENEVA: 'Geneva',
-  TOKIO: 'Tokio'
+const DEFAULT_POINT = {
+  basePrice: DEFAULT_PRICE,
+  dateFrom: '',
+  dateTo: '',
+  destination: null,
+  isFavorite: false,
+  offers: [],
+  type: PointType.FLIGHT
 };
 
 const FilterType = {
@@ -42,17 +50,13 @@ const SortType = {
   PRICE: 'price',
   OFFERS: 'offers'
 };
+
 const enabledSortType = {
   [SortType.DAY]: true,
   [SortType.EVENT]: false,
   [SortType.TIME]: true,
   [SortType.PRICE]: true,
   [SortType.OFFERS]: false,
-};
-
-const Attribute = {
-  CHECKED: 'checked',
-  DISABLED: 'disabled'
 };
 
 const UpdateType = {
@@ -83,4 +87,9 @@ const TimeLimit = {
   REMOVE: 3000,
 };
 
-export {PointType, Cities, FilterType, Mode, EditMode, SortType, enabledSortType, Attribute, UpdateType, MessageTextType, UserAction, TimeLimit};
+const Symbol = {
+  DATE_SEPARATOR: '&nbsp;&mdash;&nbsp;',
+  ROUTE_ELLIPSES: '&hellip;',
+};
+
+export {AUTHTORIZATION, END_POINT, DESTINATIONS_COUNT, PointType, FilterType, Mode, EditMode, SortType, enabledSortType, UpdateType, MessageTextType, UserAction, TimeLimit, Symbol, DEFAULT_POINT, DEFAULT_PRICE};
