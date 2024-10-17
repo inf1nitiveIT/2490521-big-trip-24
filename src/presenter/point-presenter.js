@@ -2,7 +2,6 @@ import RoutePointView from '../view/route-point-view.js';
 import EditFormView from '../view/edit-form-view.js';
 import { remove, render, replace } from '../framework/render.js';
 import { Mode, UserAction, UpdateType } from '../const.js';
-import { isDatesEqual } from '../utils.js';
 
 export default class PointPresenter {
   #boardComponent = null;
@@ -31,20 +30,20 @@ export default class PointPresenter {
     this.#pointComponent = new RoutePointView({
       point: this.#point,
       offers: this.#offersModel.getOffersByType(point.type) ,
-      destinations: this.#destinationsModel.getDestinationsById(point.destination),
-      onEditFormButtonClick: this.#onEditFormButtonClick,
-      favoriteClickHandler: this.#favoriteClickHandler,
+      destination: this.#destinationsModel.getDestinationsById(point.destination),
+      onEditFormButtonClick: this.#handleEditFormButtonClick,
+      onFavoriteButtonClick: this.#handleFavoriteClick,
     });
 
 
     this.#editFormComponent = new EditFormView({
       point: this.#point,
       offers: this.#offersModel.getOffersByType(point.type),
+      destination: this.#destinationsModel.getDestinationsById(point.destination),
       allOffers: this.#offersModel.offers,
-      destinations: this.#destinationsModel.getDestinationsById(point.destination),
       allDestinations: this.#destinationsModel.destinations,
-      onFormSubmit: this.#onFormSubmit,
-      onToggleButtonClick: this.#onToggleButtonClick,
+      onFormSubmit: this.#handleFormSubmit,
+      onToggleButtonClick: this.#handleToggleButtonClick,
       onFormDelete: this.#handleFormResetDelete
     });
 
@@ -131,23 +130,20 @@ export default class PointPresenter {
 
   };
 
-  #onFormSubmit = (point) => {
-    const isMinorUpdate = !isDatesEqual(this.#point.dateFrom, point.dateFrom)
-      || !isDatesEqual(this.#point.dateTo, point.dateTo)
-      || this.#point.basePrice !== point.basePrice;
+  #handleFormSubmit = (point) => {
     this.#handleDataChange(
       UserAction.UPDATE_POINT,
-      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      UpdateType.MINOR,
       point
     );
   };
 
-  #onEditFormButtonClick = () => {
+  #handleEditFormButtonClick = () => {
     this.#replaceRoutePointToEditForm();
     document.addEventListener('keydown', this.#escKeyDownHandler);
   };
 
-  #onToggleButtonClick = () => {
+  #handleToggleButtonClick = () => {
     this.#editFormComponent.reset(this.#point);
     this.#replaceEditFormToRoutePoint();
     document.removeEventListener('keydown', this.#escKeyDownHandler);
@@ -164,7 +160,7 @@ export default class PointPresenter {
     this.#mode = Mode.DEFAULT;
   }
 
-  #favoriteClickHandler = () => {
+  #handleFavoriteClick = () => {
     this.#handleDataChange(
       UserAction.UPDATE_POINT,
       UpdateType.PATCH,

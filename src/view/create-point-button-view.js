@@ -17,12 +17,12 @@ export default class CreatePointButtonView extends AbstractView {
     return createNewPointButtonTemplate();
   }
 
-  #setEventListeners() {
-    this.element.addEventListener('click', this.#buttonClickHandler);
-  }
-
   #buttonClickHandler = (evt) => {
     evt.preventDefault();
     this.#handleButtonClick();
   };
+
+  #setEventListeners() {
+    this.element.addEventListener('click', this.#buttonClickHandler);
+  }
 }

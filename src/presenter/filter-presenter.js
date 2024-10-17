@@ -31,7 +31,7 @@ export default class FilterPresenter {
     const prevFilterComponent = this.#filterComponent;
     this.#filterComponent = new FilterListView({
       filters: this.filters,
-      onItemChange: this.#handleFilterTypeChange
+      onItemChange: this.#handleFilterTypeChange,
     });
 
     if (prevFilterComponent === null) {
