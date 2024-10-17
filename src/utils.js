@@ -5,20 +5,6 @@ import { FilterType, SortType } from './const.js';
 dayjs.extend(duration);
 dayjs.extend(isBetween);
 
-const MAX_COUNT_OF_PRICE = 1000;
-
-function getRandomArrayElement(items) {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
-function getRandomNumber() {
-  return Math.floor(Math.random() * MAX_COUNT_OF_PRICE);
-}
-
-function getRandomBoolean() {
-  return Math.random() >= 0.5;
-}
-
 function humanizeTaskDueDate(dueDate, format) {
   return dueDate ? dayjs(dueDate).format(format) : '';
 }
@@ -60,10 +46,6 @@ const filter = {
   [FilterType.PAST]: (points) => points.filter((point) => isPastPoint(point)),
 };
 
-function updateItem(items, update) {
-  return items.map((item) => item.id === update.id ? update : item);
-}
-
 function getPointsByDate(pointA, pointB) {
   return dayjs(pointB.dateFrom).diff(dayjs(pointA.dateFrom));
 }
@@ -77,8 +59,6 @@ function getPointsByTime(pointA, pointB) {
   const pointBDuration = dayjs(pointB.dateTo).diff(dayjs(pointB.dateFrom));
   return pointBDuration - pointADuration;
 }
-
-const isDatesEqual = (dateA, dateB) => (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
 
 const sorting = {
   [SortType.DAY]: (points) => points.toSorted(getPointsByDate),
@@ -104,4 +84,14 @@ const showErrorMessage = (message) => {
   document.body.append(element);
 };
 
-export {getRandomArrayElement, humanizeTaskDueDate, getRandomNumber, getRandomBoolean, getDifferenceTime, capitalizedFirstLetterOfString, filter, updateItem, sorting, getPointsByDate, getPointsByPrice, getPointsByTime, isDatesEqual, showErrorMessage};
+const getOffersChecked = (offers, type) => {
+  const offerByType = offers.find((offer) => offer.type === type);
+  return offerByType ? offerByType.offers : [];
+};
+const getOffersTotal = (offerIDs = [], availableOffers = []) =>
+  offerIDs.reduce((totalCost, id) => {
+    const offer = availableOffers.find((item) => item.id === id);
+    return totalCost + (offer ? offer.price : 0);
+  }, 0);
+
+export {humanizeTaskDueDate, getDifferenceTime, capitalizedFirstLetterOfString, filter, sorting, getPointsByDate, getPointsByPrice, getPointsByTime, showErrorMessage, getOffersChecked, getOffersTotal};

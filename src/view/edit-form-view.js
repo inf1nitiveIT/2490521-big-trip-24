@@ -1,22 +1,11 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { humanizeTaskDueDate } from '../utils.js';
-import { PointType, EditMode} from '../const.js';
+import { PointType, EditMode, DEFAULT_POINT} from '../const.js';
 import flatpickr from 'flatpickr';
 import he from 'he';
 import 'flatpickr/dist/flatpickr.min.css';
 
-const DEFAULT_POINT = {
-  basePrice: 0,
-  dateFrom: '',
-  dateTo: '',
-  destination: null,
-  isFavorite: false,
-  offers: [],
-  type: PointType.FLIGHT
-};
-
 function createOfferTemplate({ title, price, checkedAttribute, id }) {
-
 
   return `
     <div class="event__offer-selector">
@@ -188,22 +177,22 @@ export default class EditFormView extends AbstractStatefulView {
   #datepickerEnd = null;
   #handleFormResetDelete = null;
   #editMode = null;
-  #onSubmitButtonClick = null;
-  #onCancelButtonClick = null;
+  #handleSubmitButtonClick = null;
+  #handleCancelButtonClick = null;
 
-  constructor({point = DEFAULT_POINT, destinations = {}, offers, onToggleButtonClick, onFormSubmit, allOffers, allDestinations, onFormDelete, onSubmitButtonClick, onCancelButtonClick, editMode}) {
+  constructor({point = DEFAULT_POINT, destination = {}, offers, onToggleButtonClick, onFormSubmit, allOffers, allDestinations, onFormDelete, onSubmitButtonClick, onCancelButtonClick, editMode}) {
     super();
 
     this.#point = point;
-    this.#destination = destinations;
+    this.#destination = destination;
     this.#offers = offers;
     this.#allOffers = allOffers;
     this.#allDestinations = allDestinations;
     this.#handleToggleButtonClick = onToggleButtonClick;
     this.#handleFormSubmit = onFormSubmit;
     this.#handleFormResetDelete = onFormDelete;
-    this.#onSubmitButtonClick = onSubmitButtonClick;
-    this.#onCancelButtonClick = onCancelButtonClick;
+    this.#handleSubmitButtonClick = onSubmitButtonClick;
+    this.#handleCancelButtonClick = onCancelButtonClick;
     this.#editMode = editMode;
     this._setState(EditFormView.parsePointToState(this.#point, this.#destination, this.#offers));
     this.#setEventListeners();
@@ -290,14 +279,14 @@ export default class EditFormView extends AbstractStatefulView {
 
   #newPointSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#onSubmitButtonClick(EditFormView.parseStateToPoint({
+    this.#handleSubmitButtonClick(EditFormView.parseStateToPoint({
       ...this._state
     }));
   };
 
   #formResetCancelHandler = (evt) => {
     evt.preventDefault();
-    this.#onCancelButtonClick();
+    this.#handleCancelButtonClick();
   };
 
   #toggleEditFormHandler = (evt) => {
@@ -363,7 +352,6 @@ export default class EditFormView extends AbstractStatefulView {
   }
 
   static parseStateToPoint(state) {
-
     delete state.allAvailableOffers;
     delete state.isDisabled;
     delete state.isSaving;
@@ -373,6 +361,4 @@ export default class EditFormView extends AbstractStatefulView {
       destination: state.destination.id,
     };
   }
-
-
 }

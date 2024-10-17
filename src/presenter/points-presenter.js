@@ -1,33 +1,33 @@
-import { render, remove } from '../framework/render.js';
+import CreateNewPointPresenter from './create-new-point-presenter.js';
+import PointPresenter from './point-presenter.js';
+import SortPresenter from './sort-presenter.js';
 import BoardView from '../view/board-view.js';
 import MessageFilterView from '../view/message-filter-view.js';
-import SortPresenter from './sort-presenter.js';
-import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
-import CreateNewPointPresenter from './create-new-point-presenter.js';
 import LoadingMessageView from '../view/loading-message-view.js';
 import ErrorLoadView from '../view/error-load-view.js';
-import PointPresenter from './point-presenter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+import { render, remove } from '../framework/render.js';
 import { sorting, filter, getPointsByDate, getPointsByPrice, getPointsByTime } from '../utils.js';
 import { SortType, UpdateType, FilterType, UserAction, TimeLimit } from '../const.js';
 import { createEventButtonViewComponent } from '../main.js';
 
 export default class BoardPresenter {
-  #boardComponent = new BoardView();
-  #loadingComponent = new LoadingMessageView();
-  #errorComponent = new ErrorLoadView();
   #boardContainer = null;
   #routePointModel = [];
   #offersModel = [];
   #destinationsModel = [];
   #filtersModel = [];
-  #boardPoints = [];
   #pointPresenters = new Map;
   #newPointPresenter = null;
   #sortPresenter = null;
+  #boardComponent = new BoardView();
+  #loadingComponent = new LoadingMessageView();
+  #errorComponent = new ErrorLoadView();
+  #messageComponent = null;
+  #boardPoints = [];
   #currentSortType = SortType.DAY;
   #filterType = FilterType.EVERYTHING;
   #isAddPointFormOpened = false;
-  #messageComponent = null;
   #isLoading = true;
   #isError = false;
   #uiBlocker = new UiBlocker({
@@ -82,7 +82,6 @@ export default class BoardPresenter {
     this.#newPointPresenter.init(this.points);
   }
 
-
   #renderSort() {
     this.#sortPresenter = new SortPresenter({
       boardContainer: this.#boardContainer,
@@ -96,9 +95,7 @@ export default class BoardPresenter {
     this.#boardPoints = sorting[this.#currentSortType](this.points);
   };
 
-
   #renderPoints() {
-
     this.points.forEach((point) => {
       this.#renderPoint(point);
 
@@ -116,7 +113,6 @@ export default class BoardPresenter {
 
     pointPresenter.init(point);
     this.#pointPresenters.set(point.id, pointPresenter);
-
   }
 
   #renderError() {
@@ -156,7 +152,6 @@ export default class BoardPresenter {
       this.#renderMessage();
       return;
     }
-
 
     createEventButtonViewComponent.element.disabled = false;
     this.#renderSort();
