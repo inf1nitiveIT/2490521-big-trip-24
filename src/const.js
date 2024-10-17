@@ -60,6 +60,7 @@ const UpdateType = {
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
   INIT: 'INIT',
+  ERROR: 'ERROR',
 };
 
 const MessageTextType = {
@@ -76,4 +77,10 @@ const UserAction = {
   DELETE_POINT: 'DELETE_POINT',
 };
 
-export {PointType, Cities, FilterType, Mode, EditMode, SortType, enabledSortType, Attribute, UpdateType, MessageTextType, UserAction};
+const TimeLimit = {
+  LOWER: 350,
+  UPPER: 1000,
+  REMOVE: 3000,
+};
+
+export {PointType, Cities, FilterType, Mode, EditMode, SortType, enabledSortType, Attribute, UpdateType, MessageTextType, UserAction, TimeLimit};

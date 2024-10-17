@@ -1,7 +1,7 @@
 import AbstractView from '../framework/view/abstract-view';
 import { capitalizedFirstLetterOfString } from '../utils.js';
 
-function getFilterTemplate({ type, count, isChecked }) {
+function getFilterTemplate({ type, count, isChecked, isDisabled }) {
   return `
     <div class="trip-filters__filter">
       <input
@@ -11,7 +11,7 @@ function getFilterTemplate({ type, count, isChecked }) {
         name="trip-filter"
         value="${type}"
         ${isChecked ? 'checked' : ''}
-        ${count === 0 ? 'disabled' : ''}
+        ${count === 0 || isDisabled ? 'disabled' : ''}
       >
       <label class="trip-filters__filter-label" for="filter-${type}">
         ${capitalizedFirstLetterOfString(type)}
@@ -20,8 +20,8 @@ function getFilterTemplate({ type, count, isChecked }) {
   `;
 }
 
-function createFilterListTemplate(filters) {
-  const filteringTemplates = filters.map(getFilterTemplate).join('');
+function createFilterListTemplate(filters, isDisabled) {
+  const filteringTemplates = filters.map((filter) => getFilterTemplate({ ...filter, isDisabled })).join('');
   return `
     <form class="trip-filters" action="#" method="get">
       ${filteringTemplates}
