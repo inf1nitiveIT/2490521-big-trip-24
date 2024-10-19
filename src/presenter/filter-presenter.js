@@ -6,7 +6,7 @@ import { FilterType, UpdateType } from '../const.js';
 export default class FilterPresenter {
   #filterContainer = null;
   #filterModel = null;
-  #pointsModel = null;
+  #pointsModel = [];
   #filterComponent = null;
 
   constructor({filterContainer, filterModel, routePointModel}) {

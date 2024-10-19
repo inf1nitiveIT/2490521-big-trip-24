@@ -8,8 +8,6 @@ export default class CreateNewPointPresenter {
   #handleDestroy = null;
   #destinationsModel = [];
   #offersModel = [];
-
-
   #pointAddComponent = null;
 
   constructor({pointListContainer, onDataChange, onDestroy, destinationsModel, offersModel}) {

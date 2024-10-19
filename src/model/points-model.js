@@ -5,15 +5,15 @@ import PointsAdapterService from '../server/points-adapter-service.js';
 export default class PointsModel extends Observable {
   #points = [];
   #offersModel = [];
-  #destiationModel = [];
-  #pointsApiSevrice = null;
+  #destinationsModel = [];
+  #pointsApiService = null;
   #pointsAdapterService = new PointsAdapterService();
 
   constructor({pointsApiService, offersModel, destinationsModel}) {
     super();
-    this.#pointsApiSevrice = pointsApiService;
+    this.#pointsApiService = pointsApiService;
     this.#offersModel = offersModel;
-    this.#destiationModel = destinationsModel;
+    this.#destinationsModel = destinationsModel;
   }
 
   get points() {
@@ -23,13 +23,13 @@ export default class PointsModel extends Observable {
   async init() {
     try {
       await this.#offersModel.init();
-      await this.#destiationModel.init();
-      const points = await this.#pointsApiSevrice.points;
+      await this.#destinationsModel.init();
+      const points = await this.#pointsApiService.points;
       this.#points = points.map(this.#pointsAdapterService.adaptToClient);
     } catch (error) {
       this.#points = [];
       this.#offersModel = [];
-      this.#destiationModel = [];
+      this.#destinationsModel = [];
       this._notify(UpdateType.ERROR);
     }
 
@@ -44,7 +44,7 @@ export default class PointsModel extends Observable {
     }
 
     try {
-      const response = await this.#pointsApiSevrice.updatePoint(update);
+      const response = await this.#pointsApiService.updatePoint(update);
       const updatedPoint = this.#pointsAdapterService.adaptToClient(response);
 
       this.#points = [
@@ -60,7 +60,7 @@ export default class PointsModel extends Observable {
 
   async addPoint(updateType, update) {
     try {
-      const response = await this.#pointsApiSevrice.addPoint(update);
+      const response = await this.#pointsApiService.addPoint(update);
       const newPoint = this.#pointsAdapterService.adaptToClient(response);
       this.#points = [newPoint, ...this.#points];
       this._notify(updateType, update);
@@ -71,7 +71,7 @@ export default class PointsModel extends Observable {
 
   async deletePoint(updateType, update) {
     try {
-      await this.#pointsApiSevrice.deletePoint(update);
+      await this.#pointsApiService.deletePoint(update);
       this.#points = this.#points.filter((point) => point.id !== update.id);
       this._notify(updateType);
     } catch (error) {

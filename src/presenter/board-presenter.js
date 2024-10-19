@@ -13,10 +13,10 @@ import { createEventButtonViewComponent } from '../main.js';
 
 export default class BoardPresenter {
   #boardContainer = null;
-  #routePointModel = [];
+  #pointsModel = [];
   #offersModel = [];
   #destinationsModel = [];
-  #filtersModel = [];
+  #filterModel = null;
   #pointPresenters = new Map;
   #newPointPresenter = null;
   #sortPresenter = null;
@@ -38,10 +38,10 @@ export default class BoardPresenter {
 
   constructor({boardContainer, routePointModel, offersModel, destinationsModel, filterModel, onCreateEventDestroy}) {
     this.#boardContainer = boardContainer;
-    this.#routePointModel = routePointModel;
+    this.#pointsModel = routePointModel;
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
-    this.#filtersModel = filterModel;
+    this.#filterModel = filterModel;
 
     this.#newPointPresenter = new CreateNewPointPresenter({
       pointListContainer: this.#boardComponent.element,
@@ -51,13 +51,13 @@ export default class BoardPresenter {
       onDestroy: onCreateEventDestroy
     });
 
-    this.#routePointModel.addObserver(this.#handleModelEvent);
-    this.#filtersModel.addObserver(this.#handleModelEvent);
+    this.#pointsModel.addObserver(this.#handleModelEvent);
+    this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
   get points() {
-    this.#filterType = this.#filtersModel.filter;
-    const points = this.#routePointModel.points;
+    this.#filterType = this.#filterModel.filter;
+    const points = this.#pointsModel.points;
     const filteredPoints = filter[this.#filterType](points);
     switch (this.#currentSortType) {
       case SortType.DAY:
@@ -67,18 +67,18 @@ export default class BoardPresenter {
       case SortType.PRICE:
         return filteredPoints.toSorted(getPointsByPrice);
       default:
-        return this.#routePointModel.points;
+        return this.#pointsModel.points;
     }
   }
 
   init() {
-    this.#boardPoints = [...this.#routePointModel.points];
+    this.#boardPoints = [...this.#pointsModel.points];
     this.#renderApp();
   }
 
   createPoint() {
     this.#currentSortType = SortType.DAY;
-    this.#filtersModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
+    this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
     this.#newPointPresenter.init(this.points);
   }
 
@@ -192,7 +192,7 @@ export default class BoardPresenter {
       case UserAction.UPDATE_POINT:
         this.#pointPresenters.get(update.id).setSaving();
         try {
-          await this.#routePointModel.updatePoint(updateType, update);
+          await this.#pointsModel.updatePoint(updateType, update);
         } catch (error) {
           this.#pointPresenters.get(update.id).setAborting();
         }
@@ -200,7 +200,7 @@ export default class BoardPresenter {
       case UserAction.ADD_POINT:
         this.#newPointPresenter.setSaving();
         try {
-          await this.#routePointModel.addPoint(updateType, update);
+          await this.#pointsModel.addPoint(updateType, update);
           this.#newPointPresenter.destroy();
         } catch (error) {
           this.#newPointPresenter.setAborting();
@@ -209,7 +209,7 @@ export default class BoardPresenter {
       case UserAction.DELETE_POINT:
         this.#pointPresenters.get(update.id).setDeleting();
         try {
-          await this.#routePointModel.deletePoint(updateType, update);
+          await this.#pointsModel.deletePoint(updateType, update);
         } catch (error) {
           this.#pointPresenters.get(update.id).setAborting();
         }

@@ -1,4 +1,4 @@
-import SortListView from '../view/sort-view.js';
+import SortListView from '../view/sort-list-view.js';
 import { render, RenderPosition, remove } from '../framework/render.js';
 import { SortType, enabledSortType } from '../const.js';
 

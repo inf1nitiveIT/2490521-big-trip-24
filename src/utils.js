@@ -47,7 +47,7 @@ const filter = {
 };
 
 function getPointsByDate(pointA, pointB) {
-  return dayjs(pointB.dateFrom).diff(dayjs(pointA.dateFrom));
+  return dayjs(pointA.dateFrom).diff(dayjs(pointB.dateFrom));
 }
 
 function getPointsByPrice(pointA, pointB) {
